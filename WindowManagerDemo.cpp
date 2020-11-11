@@ -1,6 +1,18 @@
+// Define things so that we don't get compiler errors later on.
 #define OLC_PGE_APPLICATION
 #define _CRT_SECURE_NO_WARNINGS
 #include "olcPixelGameEngine.h"
+
+// Helper defines and macros
+#define r currentWindow
+#define window_loop() for (int i = 0; i < WINDOW_COUNT; i++) if ((r = &windows[i])->exists)
+
+// Theming is customized here.
+#define WindowBarHeight 12
+#define WindowBarColorActive 0xFFAA0000
+#define WindowBarColorInactive 0xFF8D8985
+#define WindowBackgroundColor 0xFFCAC6C2
+#define GameBackgroundColor 0xFF838300
 
 // Number of points for chart.
 #define NUM_CHART_POINTS 20
@@ -12,7 +24,6 @@ struct chart_data {
 
 typedef void* window_data; // can be anything
 
-// This is a window manager demo.
 struct window {
 	// Is this window in a state where it exists?
 	bool exists = false;
@@ -30,36 +41,15 @@ struct window {
 	// and freed when killing it.
 	window_data wd = NULL;
 };
-/*
-void swap_u64(uint64_t* v1, uint64_t* v2) {
-	uint64_t aux;
-	aux = *v1;
-	*v1 = *v2;
-	*v2 = aux;
-}
-void swap_u32(uint32_t* v1, uint32_t* v2) {
-	uint32_t aux;
-	aux = *v1;
-	*v1 = *v2;
-	*v2 = aux;
-}
-void swap_u16(uint16_t* v1, uint16_t* v2) {
-	uint16_t aux;
-	aux = *v1;
-	*v1 = *v2;
-	*v2 = aux;
-}
-void swap_u8(uint16_t* v1, uint16_t* v2) {
-	uint8_t aux;
-	aux = *v1;
-	*v1 = *v2;
-	*v2 = aux;
-}
-*/
+
+// Maximum window count.
 const int WINDOW_COUNT = 1024;
+
+// Rectangle bounds and point checking code.
 struct rectangle {
 	int x, y, w, h;
 };
+// This code was recycled from a game I wrote, thus the naming of the variables.
 bool RectIntersect(rectangle* r1, rectangle* r2)
 {
 	int playerX1 = r1->x, playerX2 = r1->x + r1->w, playerY1 = r1->y, playerY2 = r1->y + r1->w;
@@ -79,14 +69,7 @@ bool RectContains(rectangle* rect, unsigned x, unsigned y) {
 			x >= (unsigned)x2 ||
 			y >= (unsigned)y2);
 }
-// Override base class with your custom functionality
-#define r currentWindow
-#define WindowBarHeight 12
-#define WindowBarColorActive 0xFFAA0000
-#define WindowBarColorInactive 0xFF8D8985
-#define WindowBackgroundColor 0xFFCAC6C2
-#define GameBackgroundColor 0xFF838300
-#define window_loop() for (int i = 0; i < WINDOW_COUNT; i++) if ((r = &windows[i])->exists)
+
 class WndMgr : public olc::PixelGameEngine
 {
 public:
@@ -100,14 +83,7 @@ public:
 	}
 
 	void DrawWindow(window* wnd, int i) {
-
-		//uint32_t color = wnd->color;
-		//if (selected_window != i) {
-		//	color |= 0x00c0c0c0;
-		//}
-		//i++;
-		//auto pixel = olc::Pixel(i << 30 | i << 22 | i << 14 | 255);
-		//i--;
+		// Draw the window border.
 		auto pixel = olc::Pixel(WindowBackgroundColor);
 		FillRect({ wnd->x, wnd->y }, { wnd->width, wnd->height }, pixel);
 		DrawLine(wnd->x, wnd->y, wnd->x + wnd->width, wnd->y, olc::WHITE);
@@ -117,7 +93,7 @@ public:
 		FillRect(wnd->x + 2, wnd->y + 2, wnd->width - 3, WindowBarHeight, olc::Pixel(selected_window == i ? WindowBarColorActive : WindowBarColorInactive));
 		DrawString(olc::vi2d( (int)wnd->x + 4, (int)wnd->y + 4 ), std::string(wnd->title));
 
-		// draw chart window contents
+		// Draw chart window contents.
 		float size_of = 1.f / (NUM_CHART_POINTS-1);
 		int width = (int)((wnd->width - 8) * size_of);
 		for (int i = 0; i < NUM_CHART_POINTS - 1; i++) {
@@ -195,7 +171,7 @@ public:
 			// After finding the window, get the last one, and swap this and the last window.
 			if (window_max_i != -1) {
 				selected_window = last_window;
-				// todo: add define on 64 bit
+				
 				window aux;
 				aux = windows[window_max_i];
 				windows[window_max_i] = windows[last_window];
@@ -227,6 +203,7 @@ public:
 	}
 };
 
+// Main function.
 int main()
 {
 	WndMgr demo;
